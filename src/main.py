@@ -1,9 +1,12 @@
-from textnode import TextNode
 import os
 import shutil
 
+from generate_page import generate_page
+
 dir_path_static = "./static"
 dir_path_public = "./public"
+dir_path_content = "./content"
+template_path = "./template.html"
 
 
 def main():
@@ -13,6 +16,13 @@ def main():
 
     print("Copying static files to public directory...")
     copy_files_recursive(dir_path_static, dir_path_public)
+
+    print("Generating page...")
+    generate_page(
+        os.path.join(dir_path_content, "index.md"),
+        template_path,
+        os.path.join(dir_path_public, "index.html"),
+    )
 
 
 def copy_files_recursive(source_dir_path, dest_dir_path):

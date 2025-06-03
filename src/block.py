@@ -2,7 +2,7 @@ import re
 from htmlnode import HTMLNode
 from inline import text_to_textnodes
 from parentnode import ParentNode
-from textnode import text_node_to_html_node
+from textnode import TextNode, text_node_to_html_node, text_type_text
 
 block_type_paragraph = "paragraph"
 block_type_heading = "heading"
@@ -96,11 +96,13 @@ def paragraph_to_node(block):
 
 def heading_to_node(block):
     level = 0
-    for c in block:
-        if c == "#":
+    for char in block:
+        if char == "#":
             level += 1
         else:
             break
+    if level + 1 >= len(block):
+        raise ValueError(f"invalid heading level: {level}")
     text = block[level + 1 :]
     children = text_to_children(text)
     return ParentNode(f"h{level}", children)
@@ -108,40 +110,41 @@ def heading_to_node(block):
 
 def code_to_node(block):
     if not block.startswith("```") or not block.endswith("```"):
-        raise ValueError("Invalid code block")
+        raise ValueError("invalid code block")
     text = block[4:-3]
-    children = text_to_children(text)
-    code = ParentNode("code", children)
+    raw_text_node = TextNode(text, text_type_text)
+    child = text_node_to_html_node(raw_text_node)
+    code = ParentNode("code", [child])
     return ParentNode("pre", [code])
 
 
 def olist_to_node(block):
-    lines = block.split("\n")
-    items = []
-    for l in lines:
-        text = l[3:]
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[3:]
         children = text_to_children(text)
-        items.append(ParentNode("li", children))
-    return ParentNode("ol", items)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ol", html_items)
 
 
 def ulist_to_node(block):
-    lines = block.split("\n")
-    items = []
-    for l in lines:
-        text = l[2:]
+    items = block.split("\n")
+    html_items = []
+    for item in items:
+        text = item[2:]
         children = text_to_children(text)
-        items.append(ParentNode("li", children))
-    return ParentNode("ul", items)
+        html_items.append(ParentNode("li", children))
+    return ParentNode("ul", html_items)
 
 
 def quote_to_node(block):
     lines = block.split("\n")
-    text = []
+    new_lines = []
     for line in lines:
         if not line.startswith(">"):
-            raise ValueError("Invalid quote block")
-        text.append(line.lstrip(">").strip())
-    text = " ".join(text)
-    children = text_to_children(text)
+            raise ValueError("invalid quote block")
+        new_lines.append(line.lstrip(">").strip())
+    content = " ".join(new_lines)
+    children = text_to_children(content)
     return ParentNode("blockquote", children)
