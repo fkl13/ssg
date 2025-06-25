@@ -40,7 +40,7 @@ def block_to_block_type(block):
 
     is_unordered_list = True
     for l in lines:
-        if l.startswith("*") or l.startswith("-"):
+        if l.startswith("-"):
             continue
         else:
             is_unordered_list = False
